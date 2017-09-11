@@ -76,6 +76,7 @@ int main() {
 		// "42" at the start of the message means there's a websocket message event.
 		// The 4 signifies a websocket message
 		// The 2 signifies a websocket event
+		double Lf = 2.67;
 		string sdata = string(data).substr(0, length);
 		//cout << sdata << endl;
 		if (sdata.size() > 2 && sdata[0] == '4' && sdata[1] == '2') {
@@ -91,6 +92,16 @@ int main() {
 					double py = j[1]["y"];//y position of the car
 					double psi = j[1]["psi"];//car's angle
 					double v = j[1]["speed"];//car's speed
+					double steer_value = j[1]["steering_angle"]; //input from simulator, can be used to deal with delays
+					double throttle_value = j[1]["throttle"]; //input from simulator, can be used to deal with delays
+
+					//deal with latency
+					double latency = 0.1;
+					px = px + v*cos(psi)*latency;
+					py = py + v*sin(psi)*latency;
+					psi = psi + v*deg2rad(steer_value) / Lf*latency;
+					v = v + throttle_value*latency;
+
 
 					for (int i = 0; i < ptsx.size(); i++)
 					{
@@ -119,8 +130,8 @@ int main() {
 					//double epsi = psi - atan(coeffs[1] + 2 * px * coeffs[2] + 3 * coeffs[3] * pow(px, 2));
 					double epsi = -atan(coeffs[1]); //simplification of line above because we made psi=0 and px = 0
 
-					double steer_value = j[1]["steering_angle"]; //input from simulator, can be used to deal with delays
-					double throttle_value = j[1]["throttle"]; //input from simulator, can be used to deal with delays
+					//double steer_value = j[1]["steering_angle"]; //input from simulator, can be used to deal with delays
+					//double throttle_value = j[1]["throttle"]; //input from simulator, can be used to deal with delays
 
 
 					Eigen::VectorXd state(6);
@@ -165,7 +176,7 @@ int main() {
 							mpc_y_vals.push_back(vars[i]);
 						}
 					}
-		  double Lf = 2.67;
+		  //double Lf = 2.67;
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
