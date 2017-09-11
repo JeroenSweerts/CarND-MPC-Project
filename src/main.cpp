@@ -123,7 +123,8 @@ int main() {
 					double* ptry = &ptsy[0];
 					Eigen::Map<Eigen::VectorXd> ptsy_transform(ptry, 6);
 
-					auto coeffs = polyfit(ptsx_transform, ptsy_transform, 3);
+					//auto coeffs = polyfit(ptsx_transform, ptsy_transform, 3);
+					auto coeffs = polyfit(ptsx_transform, ptsy_transform, 4);
 
 					//calculate cte and epsi
 					double cte = polyeval(coeffs, 0);
