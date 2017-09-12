@@ -6,8 +6,8 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 23;
-double dt = .085;
+size_t N = 12;
+double dt = .05;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -53,18 +53,18 @@ class FG_eval {
 	// any anything you think may be beneficial.
 	// The part of the cost based on the reference state.
 	  for (int t = 0; t < N; t++) {
-		  fg[0] += 1750*CppAD::pow(vars[cte_start + t]-ref_cte, 2);
-		  fg[0] += 1750*CppAD::pow(vars[epsi_start + t] - ref_epsi, 2);
+		  fg[0] += 2000*CppAD::pow(vars[cte_start + t]-ref_cte, 2);
+		  fg[0] += 2000*CppAD::pow(vars[epsi_start + t] - ref_epsi, 2);
 		  fg[0] += 1.25*CppAD::pow(vars[v_start + t] - ref_v, 2);
 	  }
 	  // Minimize the use of actuators.
 	  for (int t = 0; t < N - 1; t++) {
-		  fg[0] += 6*CppAD::pow(vars[delta_start + t], 2);
+		  fg[0] += 60*CppAD::pow(vars[delta_start + t], 2);
 		  fg[0] += 2 *CppAD::pow(vars[a_start + t], 2);
 	  }
 	  // Minimize the value gap between sequential actuations.
 	  for (int t = 0; t < N - 2; t++) {
-		  fg[0] += 20*CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);//defines how smooth the turning angle is
+		  fg[0] += 200*CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);//defines how smooth the turning angle is
 		  fg[0] += 10*CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
 	  }
 
@@ -107,10 +107,15 @@ class FG_eval {
 		  AD<double> delta0 = vars[delta_start + t - 1];
 		  AD<double> a0 = vars[a_start + t - 1];
 
+		  AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * x0 *x0;
 		  //AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] *x0 *x0 + coeffs[3] * x0 * x0 *x0;
-		  AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * x0 *x0 + coeffs[3] * x0 * x0 *x0 + coeffs[4] * x0 * x0 *x0*x0;
+		  //AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * x0 *x0 + coeffs[3] * x0 * x0 *x0 + coeffs[4] * x0 * x0 *x0*x0 + coeffs[5] * x0 * x0 * x0 * x0 * x0;
+		  //AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * x0 *x0 + coeffs[3] * x0 * x0 *x0 + coeffs[4] * x0 * x0 *x0*x0;
+
+		  AD<double> psides0 = CppAD::atan(2 * coeffs[2] * x0 + coeffs[1]);
 		  //AD<double> psides0 = CppAD::atan(3*coeffs[3]*x0*x0+2*coeffs[2]*x0+coeffs[1]);
-		  AD<double> psides0 = CppAD::atan(4 * coeffs[4] * x0*x0*x0 +3 * coeffs[3] * x0*x0 + 2 * coeffs[2] * x0 + coeffs[1]);
+		  //AD<double> psides0 = CppAD::atan(5 * coeffs[5] * x0*x0*x0*x0 + 4 * coeffs[4] * x0*x0*x0 +3 * coeffs[3] * x0*x0 + 2 * coeffs[2] * x0 + coeffs[1]);
+		  //AD<double> psides0 = CppAD::atan(4 * coeffs[4] * x0*x0*x0 + 3 * coeffs[3] * x0*x0 + 2 * coeffs[2] * x0 + coeffs[1]);
 
 		  // Here's `x` to get you started.
 		  // The idea here is to constraint this value to be 0.
@@ -182,6 +187,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   for (int i = delta_start; i < a_start; i++) {
 	  vars_lowerbound[i] = -0.436332*Lf;
 	  vars_upperbound[i] = 0.436332*Lf;
+	  //vars_lowerbound[i] = -0.8*Lf;
+	  //vars_upperbound[i] = 0.8*Lf;
   }
 
   //Acceleration/decceleration upper and lower limits.
